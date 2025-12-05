@@ -1,6 +1,5 @@
 # Expresso-Kit
 ☕ A TUI + CLI tool for validating git repositories with docker-compose and environment configuration support
-> For my Italian friends, I know it's ESpresso, not EXpresso, but the idea is to play around with the name and convey speed and satisfaction (for coffee lovers, of course☕♥️).
 
 [![CI](https://github.com/amindWalker/expresso-kit/actions/workflows/ci-test.yml/badge.svg)](https://github.com/amindWalker/expresso-kit/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -802,6 +801,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+> For my Italian friends, I know it's ESpresso, not EXpresso, but the idea is to play around with the name and convey speed and satisfaction (for coffee lovers, of course☕♥️).
 
 <p align="center">
   Made with ☕ and 🦀 by <a href="https://github.com/amindWalker">amindWalker</a>
