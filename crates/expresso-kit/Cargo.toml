@@ -1,0 +1,43 @@
+[package]
+name = "expresso-kit"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+readme.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+# Feature flag for integration/functional tests #[cfg(test)] has no effect for
+# integration tests so this flags is to use test helpers on integration tests as well.
+#
+# See:
+# - https://doc.rust-lang.org/cargo/reference/features.html
+# - https://doc.rust-lang.org/book/ch11-03-test-organization.html#integration-tests
+# - https://github.com/rust-lang/rust/issues/84629
+tests = []
+
+[dependencies]
+tokio.workspace = true
+clap.workspace = true
+color-eyre.workspace = true
+ratatui.workspace = true
+chrono.workspace = true
+rand.workspace = true
+futures.workspace = true
+anyhow.workspace = true
+parking_lot.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+serde_yml.workspace = true
+
+[target.'cfg(unix)'.dependencies]
+signal-hook.workspace = true
+signal-hook-tokio.workspace = true

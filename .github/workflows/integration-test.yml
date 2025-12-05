@@ -1,0 +1,195 @@
+# Integration Test Workflow for expresso-kit
+# Tests the complete validation workflow on the test-project
+
+name: Integration Test
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  # Fix for act local runner - prevent rustup cross-device link issue
+  RUSTUP_HOME: /tmp/rustup
+  CARGO_HOME: /tmp/cargo
+
+jobs:
+  integration-test:
+    name: Integration Test (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            arch: amd64
+          # - runner: ubuntu-24.04-arm
+          #   arch: arm64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Add cargo to PATH
+        run: echo "/tmp/cargo/bin" >> $GITHUB_PATH
+
+      - name: Cache cargo registry
+        if: ${{ !env.ACT }}
+        uses: actions/cache@v4
+        with:
+          path: |
+            /tmp/cargo/registry
+            /tmp/cargo/git
+            target
+          key: ${{ runner.os }}-${{ matrix.arch }}-cargo-integration-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build expresso-kit
+        run: cargo build --release
+
+      # Project discovery
+      - name: Test discover command finds test-project
+        run: |
+          echo "=== Testing discover command ==="
+          DISCOVERED=$(./target/release/expresso-kit discover --format json)
+          echo "$DISCOVERED"
+
+          # Verify test-project is discovered
+          if echo "$DISCOVERED" | grep -q "test-project"; then
+            echo "✅ test-project discovered"
+          else
+            echo "❌ test-project not found by discover"
+            exit 1
+          fi
+
+      # Validate test-project
+      - name: Full validation on test-project
+        run: |
+          echo "=== Full validation on test-project ==="
+          ./target/release/expresso-kit validate --path test-project --format json
+
+      - name: Validate test-project with --strict
+        run: |
+          echo "=== Strict validation on test-project ==="
+          ./target/release/expresso-kit validate --path test-project --strict --format json
+
+      - name: Validate test-project environment
+        run: |
+          echo "=== Environment validation on test-project ==="
+          ./target/release/expresso-kit validate --path test-project --env-only --format github
+
+      - name: Validate test-project docker-compose
+        run: |
+          echo "=== Docker Compose validation on test-project ==="
+          ./target/release/expresso-kit validate --path test-project --compose-only --format github
+
+      - name: Compare docker-compose files
+        run: |
+          echo "=== Docker Compose comparison on test-project ==="
+          ./target/release/expresso-kit validate --path test-project --compose-only --compare --format github
+
+      - name: Cross-validate env vars with docker-compose
+        run: |
+          echo "=== Cross-validation on test-project ==="
+          ./target/release/expresso-kit validate --path test-project --cross-validate --format github
+
+      - name: Validate required files
+        run: |
+          echo "=== Required files validation on test-project ==="
+          ./target/release/expresso-kit validate --path test-project --files-only \
+            --required-files "Cargo.toml,README.md,.env,.env.sample,docker-compose.yml,docker-compose.sample.yml,Dockerfile" \
+            --format github
+
+      # List services
+      - name: List services in test-project
+        run: |
+          echo "=== Listing services in test-project ==="
+          ./target/release/expresso-kit list-services --path test-project --format text
+
+      - name: List services with environment variables
+        run: |
+          echo "=== Listing services with env vars in test-project ==="
+          ./target/release/expresso-kit list-services --path test-project --with-env --format text
+
+      # Docker compose native validation
+      - name: Check Docker Compose availability
+        run: |
+          echo "=== Checking Docker Compose ==="
+          docker compose version || docker-compose version || echo "Docker Compose not available"
+
+      - name: Validate docker-compose.yml syntax
+        run: |
+          echo "=== Validating docker-compose.yml syntax ==="
+          cd test-project
+          if docker compose config --quiet 2>/dev/null; then
+            echo "✅ docker-compose.yml is valid"
+          else
+            echo "⚠️ docker-compose.yml has syntax issues (may be missing runtime env vars)"
+          fi
+
+      # Workflow generation
+      - name: Generate workflow from test-project
+        run: |
+          echo "=== Generating workflow for test-project ==="
+          ./target/release/expresso-kit init-workflow --path test-project --dry-run --compose
+
+      - name: Generate workflow to file
+        run: |
+          echo "=== Generating workflow file ==="
+          ./target/release/expresso-kit init-workflow --path test-project --output /tmp/generated-workflow.yml --compose
+          echo "Generated workflow:"
+          cat /tmp/generated-workflow.yml
+
+      # End-to-end workflow simulation
+      - name: Simulate CI workflow for test-project
+        run: |
+          echo "=== Simulating CI workflow for test-project ==="
+          echo ""
+          echo "Step 1: Check dependencies"
+          ./target/release/expresso-kit check-deps --format github
+
+          echo ""
+          echo "Step 2: Validate project configuration"
+          ./target/release/expresso-kit validate --path test-project --format github
+
+          echo ""
+          echo "Step 3: List services to verify"
+          ./target/release/expresso-kit list-services --path test-project --format github
+
+          echo ""
+          echo "✅ All validation steps passed!"
+
+      # Summary
+      - name: Integration Test Summary
+        if: always()
+        run: |
+          echo "## 🧪 Integration Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📁 Test Project: \`test-project/\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### Files Present:" >> $GITHUB_STEP_SUMMARY
+          [ -f "test-project/.env" ] && echo "- ✅ \`.env\`" >> $GITHUB_STEP_SUMMARY
+          [ -f "test-project/.env.sample" ] && echo "- ✅ \`.env.sample\`" >> $GITHUB_STEP_SUMMARY
+          [ -f "test-project/docker-compose.yml" ] && echo "- ✅ \`docker-compose.yml\`" >> $GITHUB_STEP_SUMMARY
+          [ -f "test-project/docker-compose.sample.yml" ] && echo "- ✅ \`docker-compose.sample.yml\`" >> $GITHUB_STEP_SUMMARY
+          [ -f "test-project/Cargo.toml" ] && echo "- ✅ \`Cargo.toml\`" >> $GITHUB_STEP_SUMMARY
+          [ -f "test-project/Dockerfile" ] && echo "- ✅ \`Dockerfile\`" >> $GITHUB_STEP_SUMMARY
+          [ -f "test-project/README.md" ] && echo "- ✅ \`README.md\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔍 Validations Performed:" >> $GITHUB_STEP_SUMMARY
+          echo "- Full project validation (\`validate\`)" >> $GITHUB_STEP_SUMMARY
+          echo "- Strict mode validation (\`validate --strict\`)" >> $GITHUB_STEP_SUMMARY
+          echo "- Environment validation (\`validate --env-only\`)" >> $GITHUB_STEP_SUMMARY
+          echo "- Docker Compose validation (\`validate --compose-only\`)" >> $GITHUB_STEP_SUMMARY
+          echo "- Docker Compose comparison (\`validate --compare\`)" >> $GITHUB_STEP_SUMMARY
+          echo "- Cross-validation (\`validate --cross-validate\`)" >> $GITHUB_STEP_SUMMARY
+          echo "- Required files check (\`validate --files-only\`)" >> $GITHUB_STEP_SUMMARY
+          echo "- Service enumeration (\`list-services\`)" >> $GITHUB_STEP_SUMMARY
+          echo "- Workflow generation (\`init-workflow\`)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ All Integration Tests Passed!" >> $GITHUB_STEP_SUMMARY

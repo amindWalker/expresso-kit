@@ -1,0 +1,28 @@
+# Rust
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# NOTE: .env is committed for this test project since it contains test values only
+# In real projects, .env should be in .gitignore
+
+# Docker
+docker-compose.override.yml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# SQLx
+.sqlx/
+
+# Logs
+*.log
+logs/

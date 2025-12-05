@@ -1,0 +1,187 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        RUST_VERSION: ${RUST_VERSION:-1.91.1}
+    container_name: ${APP_NAME:-test-project}-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:8080"
+      - "${METRICS_PORT:-9090}:9090"
+    environment:
+      # Application
+      APP_NAME: ${APP_NAME:-test-project}
+      APP_ENV: ${APP_ENV:-development}
+      APP_PORT: ${APP_PORT:-8080}
+      APP_HOST: ${APP_HOST:-0.0.0.0}
+      APP_LOG_LEVEL: ${APP_LOG_LEVEL:-debug}
+      RUST_LOG: ${RUST_LOG:-debug,sqlx=warn,tower_http=debug}
+      RUST_BACKTRACE: ${RUST_BACKTRACE:-1}
+      # Database
+      DATABASE_HOST: ${DATABASE_HOST:-postgres}
+      DATABASE_PORT: ${DATABASE_PORT:-5432}
+      DATABASE_NAME: ${DATABASE_NAME:-test_project_db}
+      DATABASE_USER: ${DATABASE_USER:-postgres}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-postgres_password}
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres_password@postgres:5432/test_project_db}
+      DATABASE_MAX_CONNECTIONS: ${DATABASE_MAX_CONNECTIONS:-10}
+      DATABASE_MIN_CONNECTIONS: ${DATABASE_MIN_CONNECTIONS:-2}
+      DATABASE_ACQUIRE_TIMEOUT: ${DATABASE_ACQUIRE_TIMEOUT:-30}
+      DATABASE_IDLE_TIMEOUT: ${DATABASE_IDLE_TIMEOUT:-600}
+      # Redis
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      REDIS_MAX_CONNECTIONS: ${REDIS_MAX_CONNECTIONS:-10}
+      REDIS_CONNECTION_TIMEOUT: ${REDIS_CONNECTION_TIMEOUT:-5}
+      # SQLx
+      SQLX_OFFLINE: ${SQLX_OFFLINE:-false}
+      SQLX_MIGRATION_PATH: ${SQLX_MIGRATION_PATH:-./migrations}
+      # API
+      API_VERSION: ${API_VERSION:-v1}
+      API_PREFIX: ${API_PREFIX:-/api}
+      API_RATE_LIMIT: ${API_RATE_LIMIT:-100}
+      API_RATE_LIMIT_WINDOW: ${API_RATE_LIMIT_WINDOW:-60}
+      # JWT
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-3600}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-86400}
+      # CORS
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:8080}
+      CORS_ALLOWED_METHODS: ${CORS_ALLOWED_METHODS:-GET,POST,PUT,DELETE,PATCH,OPTIONS}
+      CORS_ALLOWED_HEADERS: ${CORS_ALLOWED_HEADERS:-Content-Type,Authorization,X-Request-ID}
+      # Observability
+      OTEL_ENABLED: ${OTEL_ENABLED:-false}
+      OTEL_ENDPOINT: ${OTEL_ENDPOINT:-http://otel-collector:4317}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-test-project}
+      METRICS_PORT: ${METRICS_PORT:-9090}
+      # Feature Flags
+      FEATURE_NEW_AUTH: ${FEATURE_NEW_AUTH:-false}
+      FEATURE_CACHE_ENABLED: ${FEATURE_CACHE_ENABLED:-true}
+      FEATURE_RATE_LIMITING: ${FEATURE_RATE_LIMITING:-true}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${APP_PORT:-8080}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  postgres:
+    image: postgres:${POSTGRES_VERSION:-16-alpine}
+    container_name: ${APP_NAME:-test-project}-postgres
+    restart: unless-stopped
+    ports:
+      - "${DATABASE_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME:-test_project_db}
+      POSTGRES_USER: ${DATABASE_USER:-postgres}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-postgres_password}
+      PGUSER: ${DATABASE_USER:-postgres}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-postgres} -d ${DATABASE_NAME:-test_project_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:${REDIS_VERSION:-7-alpine}
+    container_name: ${APP_NAME:-test-project}-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory ${REDIS_MAXMEMORY:-256mb}
+      --maxmemory-policy ${REDIS_MAXMEMORY_POLICY:-allkeys-lru}
+      ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  migrations:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrations
+      args:
+        RUST_VERSION: ${RUST_VERSION:-1.91.1}
+    container_name: ${APP_NAME:-test-project}-migrations
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres_password@postgres:5432/test_project_db}
+      SQLX_OFFLINE: ${SQLX_OFFLINE:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/app/migrations:ro
+    networks:
+      - app-network
+    command: ["sqlx", "migrate", "run"]
+
+  adminer:
+    image: adminer:${ADMINER_VERSION:-latest}
+    container_name: ${APP_NAME:-test-project}-adminer
+    restart: unless-stopped
+    ports:
+      - "${ADMINER_PORT:-8081}:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: ${ADMINER_DESIGN:-nette}
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+    profiles:
+      - dev
+
+  redis-commander:
+    image: rediscommander/redis-commander:${REDIS_COMMANDER_VERSION:-latest}
+    container_name: ${APP_NAME:-test-project}-redis-commander
+    restart: unless-stopped
+    ports:
+      - "${REDIS_COMMANDER_PORT:-8082}:8081"
+    environment:
+      REDIS_HOSTS: local:redis:${REDIS_PORT:-6379}${REDIS_PASSWORD:+:${REDIS_PASSWORD}}
+    depends_on:
+      - redis
+    networks:
+      - app-network
+    profiles:
+      - dev
+
+networks:
+  app-network:
+    driver: bridge
+    name: ${APP_NAME:-test-project}-network
+
+volumes:
+  postgres_data:
+    name: ${APP_NAME:-test-project}-postgres-data
+  redis_data:
+    name: ${APP_NAME:-test-project}-redis-data

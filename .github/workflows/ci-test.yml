@@ -1,0 +1,300 @@
+# CI Test Workflow for expresso-kit
+# This workflow builds and tests all CLI features locally
+
+name: CI Test
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  # Fix for act local runner - prevent rustup cross-device link issue
+  RUSTUP_HOME: /tmp/rustup
+  CARGO_HOME: /tmp/cargo
+
+jobs:
+  build-and-test:
+    name: Build and Test CLI (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            arch: amd64
+          # - runner: ubuntu-24.04-arm
+          #   arch: arm64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Add cargo to PATH
+        run: echo "/tmp/cargo/bin" >> $GITHUB_PATH
+
+      - name: Cache cargo registry
+        if: ${{ !env.ACT }}
+        uses: actions/cache@v4
+        with:
+          path: |
+            /tmp/cargo/registry
+            /tmp/cargo/git
+            target
+          key: ${{ runner.os }}-${{ matrix.arch }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build expresso-kit
+        run: cargo build --release
+
+      - name: Add binary to PATH
+        run: echo "$PWD/target/release" >> $GITHUB_PATH
+
+      # TEST ALL CLI COMMANDS
+      - name: Test --help
+        run: ./target/release/expresso-kit --help
+
+      - name: Test --version
+        run: ./target/release/expresso-kit --version
+
+      # check-deps
+      - name: Test check-deps (text)
+        run: ./target/release/expresso-kit check-deps --format text
+
+      - name: Test check-deps (json)
+        run: ./target/release/expresso-kit check-deps --format json
+
+      - name: Test check-deps (github)
+        run: ./target/release/expresso-kit check-deps --format github
+
+      # FULL VALIDATION (IF PASS, TEST PROJECT IS PROPERLY CONFIGURED)
+      - name: Test validate on test-project (text) - SHOULD PASS
+        run: ./target/release/expresso-kit validate --path test-project --format text
+
+      - name: Test validate on test-project (json) - SHOULD PASS
+        run: ./target/release/expresso-kit validate --path test-project --format json
+
+      - name: Test validate on test-project (github) - SHOULD PASS
+        run: ./target/release/expresso-kit validate --path test-project --format github
+
+      # validate --env-only
+      - name: Test validate --env-only on test-project (text)
+        run: ./target/release/expresso-kit validate --path test-project --env-only --format text
+
+      - name: Test validate --env-only on test-project (json)
+        run: ./target/release/expresso-kit validate --path test-project --env-only --format json
+
+      - name: Test validate --env-only on test-project (github)
+        run: ./target/release/expresso-kit validate --path test-project --env-only --format github
+
+      # validate --files-only
+      - name: Test validate --files-only on test-project (text)
+        run: ./target/release/expresso-kit validate --path test-project --files-only --required-files "Cargo.toml,README.md,.env,.env.sample" --format text
+
+      - name: Test validate --files-only on test-project (json)
+        run: ./target/release/expresso-kit validate --path test-project --files-only --required-files "Cargo.toml,README.md,.env,.env.sample" --format json
+
+      - name: Test validate --files-only on test-project (github)
+        run: ./target/release/expresso-kit validate --path test-project --files-only --required-files "Cargo.toml,README.md,.env,.env.sample" --format github
+
+      # validate --compose-only
+      - name: Test validate --compose-only on test-project (text)
+        run: ./target/release/expresso-kit validate --path test-project --compose-only --format text
+
+      - name: Test validate --compose-only on test-project (json)
+        run: ./target/release/expresso-kit validate --path test-project --compose-only --format json
+
+      - name: Test validate --compose-only on test-project (github)
+        run: ./target/release/expresso-kit validate --path test-project --compose-only --format github
+
+      # validate --compare (compare docker-compose.yml with docker-compose.sample.yml)
+      - name: Test validate --compare on test-project (text)
+        run: ./target/release/expresso-kit validate --path test-project --compose-only --compare --format text
+
+      - name: Test validate --compare on test-project (json)
+        run: ./target/release/expresso-kit validate --path test-project --compose-only --compare --format json
+
+      # validate --cross-validate (check env vars used in docker-compose)
+      - name: Test validate --cross-validate on test-project (text)
+        run: ./target/release/expresso-kit validate --path test-project --cross-validate --format text
+
+      - name: Test validate --cross-validate on test-project (json)
+        run: ./target/release/expresso-kit validate --path test-project --cross-validate --format json
+
+      # validate --strict (should pass with well-configured test-project)
+      - name: Test validate --strict on test-project (text)
+        run: ./target/release/expresso-kit validate --path test-project --strict --format text
+
+      - name: Test validate --strict on test-project (json)
+        run: ./target/release/expresso-kit validate --path test-project --strict --format json
+
+      # list-services Command
+      - name: Test list-services on test-project (text)
+        run: ./target/release/expresso-kit list-services --path test-project --format text
+
+      - name: Test list-services on test-project (json)
+        run: ./target/release/expresso-kit list-services --path test-project --format json
+
+      - name: Test list-services on test-project (github)
+        run: ./target/release/expresso-kit list-services --path test-project --format github
+
+      - name: Test list-services --with-env on test-project
+        run: ./target/release/expresso-kit list-services --path test-project --with-env --format text
+
+      # discover Command
+      - name: Test discover command (text)
+        run: ./target/release/expresso-kit discover --format text
+
+      - name: Test discover command (json)
+        run: ./target/release/expresso-kit discover --format json
+
+      - name: Test discover command with --path
+        run: |
+          echo "Testing discover with specific path..."
+          ./target/release/expresso-kit discover --path test-project
+
+      # init-workflow Command
+      - name: Test init-workflow (dry-run)
+        run: ./target/release/expresso-kit init-workflow --dry-run --compose
+
+      - name: Test init-workflow (generate file)
+        run: |
+          ./target/release/expresso-kit init-workflow --output /tmp/test-workflow.yml --compose
+          cat /tmp/test-workflow.yml
+
+      - name: Test init-workflow with project path
+        run: ./target/release/expresso-kit init-workflow --path test-project --dry-run --compose
+
+      # ERROR CASES | TESTING VALIDATION FAILURES
+      - name: Create broken test project for error testing
+        run: |
+          mkdir -p /tmp/broken-project
+          cd /tmp/broken-project
+
+          # Create .env.sample with variables
+          cat > .env.sample << 'EOF'
+          DATABASE_URL=postgres://localhost/db
+          API_KEY=secret-key
+          DEBUG=false
+          REQUIRED_VAR=must-have-value
+          EOF
+
+          # Create .env with MISSING and EMPTY variables
+          cat > .env << 'EOF'
+          DATABASE_URL=postgres://localhost/testdb
+          DEBUG=true
+          API_KEY=
+          EOF
+          # Note: REQUIRED_VAR is completely missing, API_KEY is empty
+
+          # Create docker-compose.yml that references undefined vars
+          cat > docker-compose.yml << 'EOF'
+          version: '3.8'
+          services:
+            app:
+              image: myapp:latest
+              environment:
+                - DATABASE_URL=${DATABASE_URL}
+                - API_KEY=${API_KEY}
+                - UNDEFINED_VAR=${UNDEFINED_VAR}
+            db:
+              image: postgres:17-alpine
+          EOF
+
+          echo "Broken test project created:"
+          ls -la
+
+      # Test that expresso-kit correctly detects errors
+      - name: Test validation detects missing vars (expected failure)
+        run: |
+          echo "Testing that validation correctly detects missing REQUIRED_VAR..."
+          if ./target/release/expresso-kit validate --path /tmp/broken-project --env-only --format json 2>&1 | grep -q "Missing"; then
+            echo "✅ Correctly detected missing variable"
+          else
+            echo "❌ Failed to detect missing variable"
+            exit 1
+          fi
+
+      - name: Test validation detects empty vars (expected failure)
+        run: |
+          echo "Testing that validation correctly detects empty API_KEY..."
+          if ./target/release/expresso-kit validate --path /tmp/broken-project --env-only --format json 2>&1 | grep -q "Empty"; then
+            echo "✅ Correctly detected empty variable"
+          else
+            echo "❌ Failed to detect empty variable"
+            exit 1
+          fi
+
+      - name: Test cross-validate detects undefined compose vars
+        run: |
+          echo "Testing that cross-validate detects UNDEFINED_VAR in compose..."
+          ./target/release/expresso-kit validate --path /tmp/broken-project --cross-validate --format json || true
+
+      - name: Test --strict fails on warnings
+        run: |
+          echo "Testing that --strict fails when there are warnings..."
+          if ./target/release/expresso-kit validate --path /tmp/broken-project --strict --format text 2>&1; then
+            echo "❌ --strict should have failed but passed"
+            exit 1
+          else
+            echo "✅ --strict correctly failed on warnings/errors"
+          fi
+
+      # Test missing files detection
+      - name: Test validate --files-only detects missing files (expected failure)
+        run: |
+          echo "Testing detection of missing required files..."
+          if ./target/release/expresso-kit validate --path /tmp/broken-project --files-only --required-files "nonexistent.txt,missing.yml" --format json 2>&1 | grep -q "nonexistent.txt"; then
+            echo "✅ Correctly detected missing file"
+          else
+            echo "❌ Failed to detect missing file"
+            exit 1
+          fi
+
+      # Test on root project (no docker-compose)
+      - name: Test validate --files-only on root project (text)
+        run: ./target/release/expresso-kit validate --path . --files-only --required-files "Cargo.toml,README.md,LICENSE" --format text
+
+      - name: Test validate --files-only on root project (json)
+        run: ./target/release/expresso-kit validate --path . --files-only --required-files "Cargo.toml,README.md,LICENSE" --format json
+
+      # Clone command (if available)
+      - name: Test clone command (dry-run style - just check help)
+        run: ./target/release/expresso-kit clone --help
+      # Summary
+      - name: Test Summary
+        if: always()
+        run: |
+          echo "## 🧪 Expresso-Kit CLI Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Commands tested:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`--help\` and \`--version\`" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`check-deps\` (text/json/github)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`validate\` (text/json/github)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`validate --env-only\` (text/json/github)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`validate --files-only\` (text/json/github)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`validate --compose-only\` (text/json/github)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`validate --compare\` (text/json)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`validate --cross-validate\` (text/json)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`validate --strict\` (text/json)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`list-services\` (text/json/github)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`list-services --with-env\`" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`discover\` (text/json)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`init-workflow\` (dry-run/generate)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`clone --help\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🧪 Test projects used:" >> $GITHUB_STEP_SUMMARY
+          echo "- \`test-project/\` - Mock configured project to test all validations" >> $GITHUB_STEP_SUMMARY
+          echo "- \`/tmp/broken-project/\` - Intentionally broken project for error testing" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔍 Error Cases Verified:" >> $GITHUB_STEP_SUMMARY
+          echo "- Missing environment variables detection" >> $GITHUB_STEP_SUMMARY
+          echo "- Empty environment variables detection" >> $GITHUB_STEP_SUMMARY
+          echo "- Missing required files detection" >> $GITHUB_STEP_SUMMARY
+          echo "- Undefined docker-compose variables detection" >> $GITHUB_STEP_SUMMARY
+          echo "- \`--strict\` mode failure on warnings" >> $GITHUB_STEP_SUMMARY

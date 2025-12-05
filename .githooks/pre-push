@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Pre-Push Hook for Expresso-Kit
+# =============================================================================
+# This hook runs before pushing to ensure code quality standards are met.
+# It validates: formatting, linting, tests, and build.
+#
+# To install: run `git config core.hooksPath .githooks` from the repo root
+# Or manually: cp .githooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+# =============================================================================
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${BLUE}  Expresso-Kit pre-push validation${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+# Track if any step fails
+FAILED=0
+
+# Step 1: Check formatting
+echo -e "\n${YELLOW}[1/4]${NC} Checking code formatting..."
+if cargo +nightly fmt --all -- --check 2>/dev/null; then
+    echo -e "${GREEN}  ✓ Formatting OK${NC}"
+else
+    echo -e "${RED}  ✗ Formatting issues found${NC}"
+    echo -e "${YELLOW}  Run 'cargo +nightly fmt' to fix${NC}"
+    FAILED=1
+fi
+
+# Step 2: Run clippy linting
+echo -e "\n${YELLOW}[2/4]${NC} Running clippy lints..."
+if cargo clippy --all-features --workspace --tests -- -D warnings 2>/dev/null; then
+    echo -e "${GREEN}  ✓ Linting OK${NC}"
+else
+    echo -e "${RED}  ✗ Clippy found issues${NC}"
+    echo -e "${YELLOW}  Run 'cargo lint' to see details${NC}"
+    FAILED=1
+fi
+
+# Step 3: Run tests
+echo -e "\n${YELLOW}[3/4]${NC} Running tests..."
+if cargo test --workspace --all-features 2>/dev/null; then
+    echo -e "${GREEN}  ✓ Tests OK${NC}"
+else
+    echo -e "${RED}  ✗ Tests failed${NC}"
+    echo -e "${YELLOW}  Run 'cargo test-all' to see details${NC}"
+    FAILED=1
+fi
+
+# Step 4: Check build
+echo -e "\n${YELLOW}[4/4]${NC} Checking build..."
+if cargo build --workspace 2>/dev/null; then
+    echo -e "${GREEN}  ✓ Build OK${NC}"
+else
+    echo -e "${RED}  ✗ Build failed${NC}"
+    FAILED=1
+fi
+
+# Summary
+echo -e "\n${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+if [ $FAILED -eq 0 ]; then
+    echo -e "${GREEN}  ✓ All checks passed! Pushing...${NC}"
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    exit 0
+else
+    echo -e "${RED}  ✗ Pre-push validation failed${NC}"
+    echo -e "${YELLOW}  Fix the issues above before pushing${NC}"
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    exit 1
+fi

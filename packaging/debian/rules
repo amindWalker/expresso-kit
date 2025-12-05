@@ -1,0 +1,43 @@
+#!/usr/bin/make -f
+# Debian rules file for expresso-kit
+# Supports both local builds and PPA (Launchpad) builds
+
+export DH_VERBOSE = 1
+export CARGO_HOME = $(CURDIR)/debian/cargo_home
+export RUSTFLAGS = -C link-arg=-Wl,-z,relro,-z,now
+
+# For PPA builds, Rust needs to be installed during build
+# Launchpad builders have network access during build phase
+RUST_VERSION = 1.75.0
+
+%:
+	dh $@
+
+override_dh_auto_clean:
+	cargo clean || true
+	rm -rf $(CARGO_HOME)
+	rm -rf $(CURDIR)/.cargo
+
+override_dh_auto_configure:
+	# Check if cargo is available, if not install it
+	@if ! command -v cargo >/dev/null 2>&1; then \
+		echo "Installing Rust toolchain..."; \
+		curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain $(RUST_VERSION); \
+		. "$(HOME)/.cargo/env"; \
+	fi
+	mkdir -p $(CARGO_HOME)
+
+override_dh_auto_build:
+	# Ensure cargo is in PATH
+	. "$(HOME)/.cargo/env" 2>/dev/null || true; \
+	cargo build --release --locked
+
+override_dh_auto_install:
+	install -D -m 755 target/release/expresso-kit debian/expresso-kit/usr/bin/expresso-kit
+
+override_dh_auto_test:
+	# Skip tests on PPA builds (no network for integration tests)
+	@echo "Skipping tests for package build"
+
+override_dh_shlibdeps:
+	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info

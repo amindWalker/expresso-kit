@@ -1,0 +1,27 @@
+Source: expresso-kit
+Section: devel
+Priority: optional
+Maintainer: Breno Rocha <bhrochamail@gmail.com>
+Build-Depends: debhelper-compat (= 13), curl, ca-certificates, pkg-config, libssl-dev
+Standards-Version: 4.6.2
+Homepage: https://github.com/amindWalker/expresso-kit
+Vcs-Browser: https://github.com/amindWalker/expresso-kit
+Vcs-Git: https://github.com/amindWalker/expresso-kit.git
+Rules-Requires-Root: no
+
+Package: expresso-kit
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: docker.io, docker-compose, git
+Description: Automated project validator for local/cloud environments
+ EspressoKit is an automated project validator that validates repository
+ configurations for local/cloud environments with tests against CI
+ deployment to guarantee idempotent and reproducible results.
+ .
+ Features:
+  * Interactive TUI (Terminal User Interface)
+  * CLI for automation and scripting
+  * Docker Compose validation
+  * Environment file validation
+  * GitHub Actions workflow generation
+  * Cross-platform support

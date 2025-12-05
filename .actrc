@@ -1,0 +1,25 @@
+# act configuration for local GitHub Actions testing
+# See: https://github.com/nektos/act
+#
+# Usage:
+#   act -j nix-build-linux                    # Run specific job
+#   act -j nix-flake-check                    # Run flake checks
+#   act --list                                # List all jobs
+#   act push                                  # Simulate push event
+
+# Use medium-sized Ubuntu image for better compatibility
+-P ubuntu-latest=catthehacker/ubuntu:act-latest
+-P ubuntu-24.04=catthehacker/ubuntu:act-24.04
+-P ubuntu-22.04=catthehacker/ubuntu:act-22.04
+
+# Note: ARM runners require different setup
+# -P ubuntu-24.04-arm=catthehacker/ubuntu:act-24.04
+
+# macOS runners are not supported by act
+# Darwin builds must be tested on actual macOS or GitHub Actions
+
+# Artifact handling
+--artifact-server-path /tmp/act-artifacts
+
+# Environment
+--env ACT=true

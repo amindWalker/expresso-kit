@@ -1,0 +1,67 @@
+# Expresso-Kit Cargo Configuration
+# =============================================================================
+# This file defines useful cargo aliases for development workflow.
+# Use `cargo <alias>` to run these commands.
+#
+# NOTE: For complex workflows, use the scripts in ./scripts/
+#       - ./scripts/prepare-commit    : Format + lint + test (auto-fix)
+#       - ./scripts/prepare-commit --check : Check only, no fixes
+#       - ./scripts/prepare-commit --no-test : Skip tests for speed
+# =============================================================================
+
+[alias]
+# Formatting - USE: cargo +nightly fmt
+# (aliases provided for reference, but +nightly must be used directly)
+# -----------------------------------------------------------------------------
+# cargo +nightly fmt --all
+# cargo +nightly fmt --all -- --check
+fmt-check = ["fmt", "--all", "--", "--check"]
+
+# Linting & Quality
+# -----------------------------------------------------------------------------
+lint = ["clippy", "--all-features", "--workspace", "--tests", "--", "-D", "warnings"]
+lint-fix = ["clippy", "--all-features", "--workspace", "--tests", "--fix", "--allow-dirty", "--allow-staged"]
+
+# Check for unused dependencies
+check-deps = [
+  "check",
+  "--config",
+  "target.'cfg(all())'.rustflags=[\"-W\", \"unused-crate-dependencies\"]",
+]
+
+# Testing
+# -----------------------------------------------------------------------------
+test-all = ["test", "--workspace", "--all-features"]
+test-lib = ["test", "--workspace", "--lib"]
+
+# Build
+# -----------------------------------------------------------------------------
+build-release = ["build", "--release", "--workspace"]
+
+# CI/Quality Gate (run all checks in sequence)
+# -----------------------------------------------------------------------------
+# Use this before committing to ensure code quality
+ci = ["xtask", "ci"]
+
+# Pre-commit/Pre-push validation (all-in-one)
+# This runs: fmt check -> lint -> test -> build
+# -----------------------------------------------------------------------------
+validate = ["xtask", "validate"]
+
+[target.'cfg(all())']
+rustflags = [
+  # Treat warnings as errors in CI
+  # "-D", "warnings",
+
+  # Allow specific clippy lints as needed
+  "-A", "clippy::large_enum_variant",
+]
+
+[env]
+CARGO_RUSTC_CURRENT_DIR = { value = "", relative = true }
+RUST_LOG = "expresso_kit=debug"
+
+[profile.ci]
+inherits = "dev"
+opt-level = 0
+codegen-units = 8
