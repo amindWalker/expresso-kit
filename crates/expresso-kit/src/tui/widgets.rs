@@ -10,8 +10,10 @@ use ratatui::{
     widgets::{Block, Borders, Cell, Gauge, List, ListItem, Paragraph, Row, Table, TableState},
 };
 
-use super::icons;
-use super::types::{DashboardStats, LogEntry, RepoStatus, Repository};
+use super::{
+    icons,
+    types::{DashboardStats, LogEntry, RepoStatus, Repository},
+};
 
 // =============================================================================
 // Helper Functions

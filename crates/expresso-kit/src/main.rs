@@ -2692,7 +2692,10 @@ jobs:
                     if let Some(missing) = docker_status.missing_env_vars.get(&service.name).filter(|m| !m.is_empty()) {
                         service_lines.push(Line::from(vec![
                             Span::raw("      "),
-                            Span::styled(format!("{} {} var(s) missing in .env", icons::WARN, missing.len()), Style::default().fg(Color::Yellow)),
+                            Span::styled(
+                                format!("{} {} var(s) missing in .env", icons::WARN, missing.len()),
+                                Style::default().fg(Color::Yellow),
+                            ),
                         ]));
                     }
                     service_lines.push(Line::from("")); // Spacing
@@ -3588,9 +3591,9 @@ jobs:
                     |repo| {
                         let summary = format!("Run full validation for '{}'?", repo.name);
                         let details = format!(
-                            "Path: {}\n\nValidation Checks to Perform:\n--------------------------------\n[+] Environment \
-                             validation\n* Compare .env.sample <-> .env\n* Detect missing/empty variables\n\n[+] Required files check\n* \
-                             Verify: {}\n\n[+] Docker Compose validation\n* Parse docker-compose.yml\n* Validate service configurations\n* \
+                            "Path: {}\n\nValidation Checks to Perform:\n--------------------------------\n[+] Environment validation\n* \
+                             Compare .env.sample <-> .env\n* Detect missing/empty variables\n\n[+] Required files check\n* Verify: \
+                             {}\n\n[+] Docker Compose validation\n* Parse docker-compose.yml\n* Validate service configurations\n* \
                              Cross-check env var references\n\nCurrent Status:\n* Cloned: {}\n* Errors: {} | Warnings: {}",
                             repo.path.display(),
                             if repo.required_files.is_empty() {
@@ -3658,8 +3661,8 @@ jobs:
             format!("\n\n[*] Selected repositories:\n{}", selected_details.join("\n"))
         };
         let details = format!(
-            "[#] Repositories: {} total, {} selected, {} cloned\n\n[>] Tracked directories:\n{}{}\n\nPress ENTER or Y to save, ESC or N to \
-             cancel",
+            "[#] Repositories: {} total, {} selected, {} cloned\n\n[>] Tracked directories:\n{}{}\n\nPress ENTER or Y to save, ESC or N \
+             to cancel",
             total_repos, selected_repos, cloned_repos, paths_summary, selected_section
         );
         let actions = &[("ENTER/Y", "Save"), ("ESC/N", "Cancel")];

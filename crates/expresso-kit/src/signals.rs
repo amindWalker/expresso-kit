@@ -2,10 +2,9 @@
 //!
 //! Cross-platform signal handling for Unix and Windows
 
-use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
 #[cfg(unix)]
 use std::sync::atomic::Ordering;
+use std::sync::{Arc, atomic::AtomicBool};
 
 // =============================================================================
 // Unix Signal Handler
@@ -38,6 +37,7 @@ pub fn setup_signal_handler(should_quit: Arc<AtomicBool>) -> std::io::Result<()>
 
 /// Set up signal handlers for graceful shutdown (Windows - no-op)
 #[cfg(windows)]
+#[allow(clippy::needless_pass_by_value)]
 pub fn setup_signal_handler(should_quit: Arc<AtomicBool>) -> std::io::Result<()> {
     let _ = should_quit;
     Ok(())

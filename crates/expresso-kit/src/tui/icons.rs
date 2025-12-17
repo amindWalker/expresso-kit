@@ -132,4 +132,3 @@ pub const NOT_FOUND: &str = "[x] Not found";
 pub const YES: &str = "[+] Yes";
 /// No status string
 pub const NO: &str = "[x] No";
-

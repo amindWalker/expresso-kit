@@ -47,7 +47,7 @@ pub fn new_git_command() -> Command {
 /// Normalize a path string for Windows (convert forward slashes)
 #[cfg(target_os = "windows")]
 pub fn normalize_path(path: &str) -> PathBuf {
-    PathBuf::from(path.replace("/", "\\"))
+    PathBuf::from(path.replace('/', "\\"))
 }
 
 /// Normalize a path string for Unix (no conversion needed)
@@ -189,10 +189,9 @@ pub mod file_patterns {
 pub mod signals {
     //! Cross-platform signal handling for graceful shutdown
 
-    use std::sync::Arc;
-    use std::sync::atomic::AtomicBool;
     #[cfg(unix)]
     use std::sync::atomic::Ordering;
+    use std::sync::{Arc, atomic::AtomicBool};
 
     #[cfg(unix)]
     use signal_hook::consts::signal::{SIGHUP, SIGINT, SIGTERM};
@@ -216,6 +215,7 @@ pub mod signals {
 
     /// Set up signal handlers for graceful shutdown (Windows - no-op)
     #[cfg(windows)]
+    #[allow(clippy::needless_pass_by_value)]
     pub fn setup_signal_handler(should_quit: Arc<AtomicBool>) -> std::io::Result<()> {
         let _ = should_quit;
         Ok(())

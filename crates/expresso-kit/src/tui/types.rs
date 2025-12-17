@@ -11,8 +11,8 @@ use std::{
 use chrono::Local;
 use ratatui::style::Color;
 
-use crate::docker_compose::ServiceEnvConfig;
 use super::icons;
+use crate::docker_compose::ServiceEnvConfig;
 
 // =============================================================================
 // Repository Status
