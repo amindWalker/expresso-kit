@@ -2,10 +2,10 @@
 //!
 //! Cross-platform signal handling for Unix and Windows
 
-use std::sync::{
-    Arc,
-    atomic::{AtomicBool, Ordering},
-};
+use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
+#[cfg(unix)]
+use std::sync::atomic::Ordering;
 
 // =============================================================================
 // Unix Signal Handler

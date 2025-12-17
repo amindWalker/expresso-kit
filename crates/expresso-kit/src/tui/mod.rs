@@ -3,6 +3,7 @@
 //! This module provides a terminal user interface for managing repositories,
 //! environments, and workflows.
 
+pub mod icons;
 pub mod popups;
 pub mod state;
 pub mod types;
@@ -13,6 +14,7 @@ pub mod widgets;
 // pub mod render;
 // pub mod handlers;
 
+pub use icons::*;
 pub use popups::*;
 pub use state::*;
 pub use types::*;

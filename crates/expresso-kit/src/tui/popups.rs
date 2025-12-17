@@ -10,6 +10,8 @@ use ratatui::{
     widgets::{Block, Borders, Clear, Paragraph, Wrap},
 };
 
+use super::icons;
+
 // =============================================================================
 // Confirm Dialog
 // =============================================================================
@@ -70,7 +72,7 @@ impl ConfirmDialog<'_> {
             ])
             .split(inner);
 
-        let expand_icon = if self.expanded { "▼" } else { "▶" };
+        let expand_icon = if self.expanded { icons::EXPANDED } else { icons::COLLAPSED };
         let summary_line = Line::from(vec![
             Span::styled(expand_icon, Style::default().fg(Color::Yellow)),
             Span::raw(" "),

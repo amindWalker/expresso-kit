@@ -10,6 +10,7 @@ use ratatui::{
     widgets::{Block, Borders, Cell, Gauge, List, ListItem, Paragraph, Row, Table, TableState},
 };
 
+use super::icons;
 use super::types::{DashboardStats, LogEntry, RepoStatus, Repository};
 
 // =============================================================================
@@ -84,16 +85,16 @@ impl RepoTable<'_> {
         .height(1);
 
         let rows = self.repos.iter().map(|repo| {
-            let selection_indicator = if repo.selected { "🔖" } else { "  " };
+            let selection_indicator = if repo.selected { icons::BOOKMARKED } else { icons::NOT_BOOKMARKED };
             let status_icon = repo.status.icon();
             let progress = repo.status.progress().unwrap_or_else(|| if repo.is_ready() { 100 } else { 0 });
             let progress_bar = make_progress_bar(progress, 20);
             let issue_display = if !repo.is_cloned() {
-                "—".to_string()
+                icons::DASH.to_string()
             } else if repo.has_issues() {
-                format!("{} ⚠", repo.total_issues())
+                format!("{} {}", repo.total_issues(), icons::WARNING)
             } else {
-                "✓".to_string()
+                icons::CHECK.to_string()
             };
             let last_update = repo.last_updated.format("%H:%M:%S").to_string();
             let issue_style = match (repo.is_cloned(), repo.has_issues()) {
@@ -157,9 +158,9 @@ impl StatsPanel<'_> {
             .split(area);
 
         let stats_blocks = [
-            ("Total", self.stats.total_repos.to_string(), Color::Blue, "📊"),
-            ("Ready", self.stats.ready.to_string(), Color::Green, "✅"),
-            ("Issues", format!("{}/{}", self.stats.errors, self.stats.warnings), Color::Red, "⚠️"),
+            ("Total", self.stats.total_repos.to_string(), Color::Blue, icons::STATS_TOTAL),
+            ("Ready", self.stats.ready.to_string(), Color::Green, icons::STATS_READY),
+            ("Issues", format!("{}/{}", self.stats.errors, self.stats.warnings), Color::Red, icons::STATS_ISSUES),
         ];
 
         for (i, (title, value, color, icon)) in stats_blocks.iter().enumerate() {

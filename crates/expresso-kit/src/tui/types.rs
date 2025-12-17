@@ -12,6 +12,7 @@ use chrono::Local;
 use ratatui::style::Color;
 
 use crate::docker_compose::ServiceEnvConfig;
+use super::icons;
 
 // =============================================================================
 // Repository Status
@@ -43,12 +44,12 @@ impl RepoStatus {
 
     pub fn icon(&self) -> &'static str {
         match self {
-            Self::Pending => "-",
-            Self::Cloning(_) => "📡",
-            Self::Validating(_) => "🔍",
-            Self::Ready => "🟢",
-            Self::Error(_) => "❗",
-            Self::Warning(_) => "⚠️",
+            Self::Pending => icons::PENDING,
+            Self::Cloning(_) => icons::CLONING,
+            Self::Validating(_) => icons::VALIDATING,
+            Self::Ready => icons::READY,
+            Self::Error(_) => icons::ERROR,
+            Self::Warning(_) => icons::WARNING,
         }
     }
 
@@ -256,13 +257,13 @@ impl LogLevel {
         }
     }
 
-    pub const fn icon(&self) -> &'static str {
+    pub fn icon(&self) -> &'static str {
         match self {
-            Self::Info => "💬",
-            Self::Success => "🟩",
-            Self::Warning => "⚠️",
-            Self::Error => "❗",
-            Self::Debug => "⚙️",
+            Self::Info => icons::LOG_INFO,
+            Self::Success => icons::LOG_SUCCESS,
+            Self::Warning => icons::LOG_WARNING,
+            Self::Error => icons::LOG_ERROR,
+            Self::Debug => icons::LOG_DEBUG,
         }
     }
 }

@@ -35,7 +35,7 @@ use expresso_kit::{
     tui::{
         CloneConfig, ConfirmDialog, DashboardStats, DashboardTab, DockerComposePopupState, DockerComposeStatus, EnvStatus, ErrorPopup,
         HelpPopup, InputMode, InputState, LogEntry, LogLevel, LogViewer, ProgressGauges, RepoStatus, RepoTable, Repository, StatsPanel,
-        Toast, WorkflowPopupState, WorkflowTemplate, centered_popup,
+        Toast, WorkflowPopupState, WorkflowTemplate, centered_popup, icons,
     },
     validation,
     workflow_templates,
@@ -2281,7 +2281,7 @@ jobs:
         let mut lines: Vec<Line> = Vec::new();
         for (idx, (repo_name, repo_path)) in repos_to_clone.iter().enumerate() {
             let is_selected = idx == self.clone_config.selected_repo_index;
-            let prefix = if is_selected { "▶ " } else { "  " };
+            let prefix = if is_selected { icons::SELECTED } else { icons::UNSELECTED };
             let name_style = if is_selected {
                 Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
             } else {
@@ -2572,9 +2572,9 @@ jobs:
                 Constraint::Length(3), // Help line
             ])
             .split(inner);
-        let sample_icon = if docker_status.sample_exists { "✅" } else { "❌" };
-        let compose_icon = if docker_status.compose_exists { "✅" } else { "❌" };
-        let env_file_icon = if env_status.sample_file_exists { "✅" } else { "⚠️" };
+        let sample_icon = if docker_status.sample_exists { icons::CHECK } else { icons::CROSS };
+        let compose_icon = if docker_status.compose_exists { icons::CHECK } else { icons::CROSS };
+        let env_file_icon = if env_status.sample_file_exists { icons::CHECK } else { icons::WARN };
         let status_line = Line::from(vec![
             Span::styled("Sample: ", Style::default().fg(Color::Gray)),
             Span::raw(sample_icon),
@@ -2617,10 +2617,10 @@ jobs:
                 if is_selected {
                     selected_line_start = service_lines.len();
                 }
-                let select_indicator = if is_selected { "▶ " } else { "  " };
-                let expand_arrow = if is_expanded { "▼ " } else { "▷ " };
-                let env_indicator = if service.has_environment { "⚙️" } else { "  " };
-                let file_indicator = if service.has_env_file { "📄" } else { "  " };
+                let select_indicator = if is_selected { icons::SELECTED } else { icons::UNSELECTED };
+                let expand_arrow = if is_expanded { icons::ARROW_DOWN } else { icons::ARROW_RIGHT };
+                let env_indicator = if service.has_environment { icons::CONFIG } else { "   " };
+                let file_indicator = if service.has_env_file { icons::FILE } else { "   " };
                 let style = if is_selected {
                     Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
                 } else {
@@ -2660,11 +2660,11 @@ jobs:
                         ]));
                         for (key, value) in &service.environment {
                             let status_icon = if env_status.missing_vars.contains(key) {
-                                Span::styled("❌ ", Style::default().fg(Color::Red))
+                                Span::styled(format!("{} ", icons::CROSS), Style::default().fg(Color::Red))
                             } else if env_status.empty_vars.contains(key) {
-                                Span::styled("⚠️ ", Style::default().fg(Color::Yellow))
+                                Span::styled(format!("{} ", icons::WARN), Style::default().fg(Color::Yellow))
                             } else {
-                                Span::styled("✓ ", Style::default().fg(Color::Green))
+                                Span::styled(format!("{} ", icons::CHECKMARK), Style::default().fg(Color::Green))
                             };
                             let var_line = Line::from(vec![
                                 Span::raw("        "),
@@ -2684,7 +2684,7 @@ jobs:
                         for file in &service.env_file {
                             service_lines.push(Line::from(vec![
                                 Span::raw("        "),
-                                Span::styled("📁 ", Style::default().fg(Color::Green)),
+                                Span::styled(format!("{} ", icons::FILE), Style::default().fg(Color::Green)),
                                 Span::styled(file, Style::default().fg(Color::White)),
                             ]));
                         }
@@ -2692,7 +2692,7 @@ jobs:
                     if let Some(missing) = docker_status.missing_env_vars.get(&service.name).filter(|m| !m.is_empty()) {
                         service_lines.push(Line::from(vec![
                             Span::raw("      "),
-                            Span::styled(format!("⚠️  {} var(s) missing in .env", missing.len()), Style::default().fg(Color::Yellow)),
+                            Span::styled(format!("{} {} var(s) missing in .env", icons::WARN, missing.len()), Style::default().fg(Color::Yellow)),
                         ]));
                     }
                     service_lines.push(Line::from("")); // Spacing
@@ -2837,7 +2837,7 @@ jobs:
             .render(chunks[1], frame.buffer_mut());
     }
     fn render_tabs(&self, frame: &mut Frame, area: Rect) {
-        let tabs = Tabs::new(vec!["📁 Repositories", "🧰 Environment", "⚙️ Workflows", "📓 Logs"])
+        let tabs = Tabs::new(vec!["[R] Repositories", "[E] Environment", "[W] Workflows", "[L] Logs"])
             .block(Block::default().borders(Borders::BOTTOM))
             .select(match self.current_tab {
                 DashboardTab::Repositories => 0,
@@ -2868,7 +2868,7 @@ jobs:
             let start_y = inner.y + inner.height.saturating_sub(content_height) / 2;
             let empty_message = vec![
                 Line::from(Span::styled(
-                    "📁 No repositories added yet",
+                    "[!] No repositories added yet",
                     Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
                 )),
                 Line::from(""),
@@ -2957,7 +2957,7 @@ jobs:
             let centered_area = Rect::new(inner.x, start_y, inner.width, content_height);
             let empty_message = vec![
                 Line::from(Span::styled(
-                    "🔠 No repositories to validate",
+                    "[!] No repositories to validate",
                     Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
                 )),
                 Line::from(""),
@@ -2967,10 +2967,10 @@ jobs:
                 )),
                 Line::from(""),
                 Line::from(Span::styled("Environment validation compares:", Style::default().fg(Color::Cyan))),
-                Line::from(Span::styled(".env.sample (template) ↔ .env (actual)", Style::default().fg(Color::DarkGray))),
+                Line::from(Span::styled(".env.sample (template) <-> .env (actual)", Style::default().fg(Color::DarkGray))),
                 Line::from(""),
-                Line::from(Span::styled("❌ Missing = key not in .env", Style::default().fg(Color::Red))),
-                Line::from(Span::styled("⚠️  Empty = key exists but has no value", Style::default().fg(Color::Yellow))),
+                Line::from(Span::styled("[x] Missing = key not in .env", Style::default().fg(Color::Red))),
+                Line::from(Span::styled("[!] Empty = key exists but has no value", Style::default().fg(Color::Yellow))),
             ];
             Paragraph::new(empty_message)
                 .alignment(Alignment::Center)
@@ -2992,12 +2992,12 @@ jobs:
         if let Some(repo) = selected_repo {
             let (sample_status, sample_desc) = if repo.env_status.sample_file_exists {
                 (
-                    Span::styled("✅ Found", Style::default().fg(Color::Green)),
+                    Span::styled(icons::FOUND, Style::default().fg(Color::Green)),
                     "Reference file for environment variables",
                 )
             } else {
                 (
-                    Span::styled("❌ Not found", Style::default().fg(Color::Red)),
+                    Span::styled(icons::NOT_FOUND, Style::default().fg(Color::Red)),
                     "No reference file. Create .env.sample to enable validation",
                 )
             };
@@ -3026,16 +3026,16 @@ jobs:
             };
             let has_docker_compose = repo.docker_compose_status.compose_exists || repo.docker_compose_status.sample_exists;
             let dc_sample_status = if repo.docker_compose_status.sample_exists {
-                Span::styled("✅", Style::default().fg(Color::Green))
+                Span::styled(icons::CHECK, Style::default().fg(Color::Green))
             } else {
-                Span::styled("—", Style::default().fg(Color::DarkGray))
+                Span::styled(icons::DASH, Style::default().fg(Color::DarkGray))
             };
             let dc_compose_status = if repo.docker_compose_status.compose_exists {
-                Span::styled("✅", Style::default().fg(Color::Green))
+                Span::styled(icons::CHECK, Style::default().fg(Color::Green))
             } else if repo.docker_compose_status.sample_exists {
-                Span::styled("❌", Style::default().fg(Color::Red))
+                Span::styled(icons::CROSS, Style::default().fg(Color::Red))
             } else {
-                Span::styled("—", Style::default().fg(Color::DarkGray))
+                Span::styled(icons::DASH, Style::default().fg(Color::DarkGray))
             };
             let dc_services_count = repo.docker_compose_status.services.len();
             let dc_with_env = repo.docker_compose_status.services.iter().filter(|s| s.has_environment).count();
@@ -3143,7 +3143,7 @@ jobs:
             if repo.env_status.missing_vars.is_empty() && repo.env_status.empty_vars.is_empty() {
                 if repo.env_status.sample_file_exists {
                     detail_lines.push(Line::from(Span::styled(
-                        "✅ All variables are present and have values!",
+                        "[+] All variables are present and have values!",
                         Style::default().fg(Color::Green),
                     )));
                 } else {
@@ -3162,7 +3162,7 @@ jobs:
             } else {
                 if !repo.env_status.missing_vars.is_empty() {
                     detail_lines.push(Line::from(Span::styled(
-                        "❌ Missing variables (ERROR):",
+                        "[x] Missing variables (ERROR):",
                         Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
                     )));
                     for var in &repo.env_status.missing_vars {
@@ -3172,7 +3172,7 @@ jobs:
                 }
                 if !repo.env_status.empty_vars.is_empty() {
                     detail_lines.push(Line::from(Span::styled(
-                        "⚠️ Empty variables (WARNING):",
+                        "[!] Empty variables (WARNING):",
                         Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
                     )));
                     for var in &repo.env_status.empty_vars {
@@ -3183,15 +3183,15 @@ jobs:
             if repo.docker_compose_status.sample_exists && !repo.docker_compose_status.compose_exists {
                 detail_lines.push(Line::from(""));
                 detail_lines.push(Line::from(Span::styled(
-                    "🐳 Docker Compose:",
+                    "[D] Docker Compose:",
                     Style::default().fg(Color::Blue).add_modifier(Modifier::BOLD),
                 )));
-                detail_lines.push(Line::from(Span::styled("   ❌ docker-compose.yml missing", Style::default().fg(Color::Red))));
+                detail_lines.push(Line::from(Span::styled("   [x] docker-compose.yml missing", Style::default().fg(Color::Red))));
                 detail_lines.push(Line::from(Span::styled("   Press 'd' to copy from sample", Style::default().fg(Color::DarkGray))));
             } else if !repo.docker_compose_status.missing_env_vars.is_empty() {
                 detail_lines.push(Line::from(""));
                 detail_lines.push(Line::from(Span::styled(
-                    "🐳 Docker Compose Issues:",
+                    "[D] Docker Compose Issues:",
                     Style::default().fg(Color::Blue).add_modifier(Modifier::BOLD),
                 )));
                 for (service, vars) in &repo.docker_compose_status.missing_env_vars {
@@ -3286,27 +3286,27 @@ jobs:
             )),
             Line::from(""),
             Line::from(vec![
-                Span::styled("🦀 Rust    ", Style::default().fg(Color::Red)),
+                Span::styled("[Rs] Rust    ", Style::default().fg(Color::Red)),
                 Span::styled("- Build, test, clippy, fmt", Style::default().fg(Color::Gray)),
             ]),
             Line::from(vec![
-                Span::styled("📦 Node.js ", Style::default().fg(Color::Green)),
+                Span::styled("[Js] Node.js ", Style::default().fg(Color::Green)),
                 Span::styled("- Build, lint, test (18/20/22)", Style::default().fg(Color::Gray)),
             ]),
             Line::from(vec![
-                Span::styled("🐍 Python  ", Style::default().fg(Color::Yellow)),
+                Span::styled("[Py] Python  ", Style::default().fg(Color::Yellow)),
                 Span::styled("- Lint, test (3.10/3.11/3.12)", Style::default().fg(Color::Gray)),
             ]),
             Line::from(vec![
-                Span::styled("🐻‍❄️ Go      ", Style::default().fg(Color::Cyan)),
+                Span::styled("[Go] Go      ", Style::default().fg(Color::Cyan)),
                 Span::styled("- Build, test, lint", Style::default().fg(Color::Gray)),
             ]),
             Line::from(vec![
-                Span::styled("🐳 Docker  ", Style::default().fg(Color::Blue)),
+                Span::styled("[Dk] Docker  ", Style::default().fg(Color::Blue)),
                 Span::styled("- Build and test image", Style::default().fg(Color::Gray)),
             ]),
             Line::from(vec![
-                Span::styled("🐋 Compose ", Style::default().fg(Color::Magenta)),
+                Span::styled("[Dc] Compose ", Style::default().fg(Color::Magenta)),
                 Span::styled("- Validate and test services", Style::default().fg(Color::Gray)),
             ]),
             Line::from(""),
@@ -3567,11 +3567,11 @@ jobs:
                     |repo| {
                         let summary = format!("Validate environment for '{}'?", repo.name);
                         let details = format!(
-                            "📁 Path: {}\n\n🔍 Environment Validation Checks:\n────────────────────────────────\n• Compare .env.sample ↔ \
-                             .env\n• Detect missing variables\n• Detect empty variables\n\nCurrent Status:\n• Sample file: {}\n• Missing \
-                             vars: {}\n• Empty vars: {}",
+                            "Path: {}\n\nEnvironment Validation Checks:\n--------------------------------\n* Compare .env.sample <-> \
+                             .env\n* Detect missing variables\n* Detect empty variables\n\nCurrent Status:\n* Sample file: {}\n* Missing \
+                             vars: {}\n* Empty vars: {}",
                             repo.path.display(),
-                            if repo.env_status.sample_file_exists { "✅ Found" } else { "❌ Not found" },
+                            if repo.env_status.sample_file_exists { "[+] Found" } else { "[x] Not found" },
                             repo.env_status.missing_vars.len(),
                             repo.env_status.empty_vars.len()
                         );
@@ -3588,17 +3588,17 @@ jobs:
                     |repo| {
                         let summary = format!("Run full validation for '{}'?", repo.name);
                         let details = format!(
-                            "📁 Path: {}\n\n🔍 Validation Checks to Perform:\n────────────────────────────────\n✓ Environment \
-                             validation\n• Compare .env.sample ↔ .env\n• Detect missing/empty variables\n\n✓ Required files check\n• \
-                             Verify: {}\n\n✓ Docker Compose validation\n• Parse docker-compose.yml\n• Validate service configurations\n• \
-                             Cross-check env var references\n\nCurrent Status:\n• Cloned: {}\n• Errors: {} | Warnings: {}",
+                            "Path: {}\n\nValidation Checks to Perform:\n--------------------------------\n[+] Environment \
+                             validation\n* Compare .env.sample <-> .env\n* Detect missing/empty variables\n\n[+] Required files check\n* \
+                             Verify: {}\n\n[+] Docker Compose validation\n* Parse docker-compose.yml\n* Validate service configurations\n* \
+                             Cross-check env var references\n\nCurrent Status:\n* Cloned: {}\n* Errors: {} | Warnings: {}",
                             repo.path.display(),
                             if repo.required_files.is_empty() {
                                 ".env".to_string()
                             } else {
                                 repo.required_files.join(", ")
                             },
-                            if repo.is_cloned() { "✅ Yes" } else { "❌ No" },
+                            if repo.is_cloned() { "[+] Yes" } else { "[x] No" },
                             repo.errors.len(),
                             repo.warnings.len()
                         );
@@ -3647,18 +3647,18 @@ jobs:
         drop(repos);
         let paths_summary = unique_dirs
             .iter()
-            .map(|(dir, repo_names)| format!("  📁 {} ({} repos)", dir, repo_names.len()))
+            .map(|(dir, repo_names)| format!("  [D] {} ({} repos)", dir, repo_names.len()))
             .collect::<Vec<_>>()
             .join("\n");
-        let title = "💾 Save Configuration";
+        let title = "[S] Save Configuration";
         let summary = "Save current state to .expresso-kit.toml";
         let selected_section = if selected_details.is_empty() {
             String::new()
         } else {
-            format!("\n\n🔹 Selected repositories:\n{}", selected_details.join("\n"))
+            format!("\n\n[*] Selected repositories:\n{}", selected_details.join("\n"))
         };
         let details = format!(
-            "📊 Repositories: {} total, {} selected, {} cloned\n\n📍 Tracked directories:\n{}{}\n\nPress ENTER or Y to save, ESC or N to \
+            "[#] Repositories: {} total, {} selected, {} cloned\n\n[>] Tracked directories:\n{}{}\n\nPress ENTER or Y to save, ESC or N to \
              cancel",
             total_repos, selected_repos, cloned_repos, paths_summary, selected_section
         );

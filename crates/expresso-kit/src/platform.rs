@@ -189,10 +189,10 @@ pub mod file_patterns {
 pub mod signals {
     //! Cross-platform signal handling for graceful shutdown
 
-    use std::sync::{
-        Arc,
-        atomic::{AtomicBool, Ordering},
-    };
+    use std::sync::Arc;
+    use std::sync::atomic::AtomicBool;
+    #[cfg(unix)]
+    use std::sync::atomic::Ordering;
 
     #[cfg(unix)]
     use signal_hook::consts::signal::{SIGHUP, SIGINT, SIGTERM};
