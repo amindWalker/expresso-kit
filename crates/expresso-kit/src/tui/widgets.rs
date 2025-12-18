@@ -115,14 +115,17 @@ impl RepoTable<'_> {
             .height(1)
         });
 
-        let table = Table::new(rows, &[
-            Constraint::Ratio(1, 8), // Select
-            Constraint::Ratio(1, 8), // Cloned
-            Constraint::Ratio(2, 8), // Repository (2x)
-            Constraint::Ratio(2, 8), // Progress (2x)
-            Constraint::Ratio(1, 8), // Updated
-            Constraint::Ratio(1, 8), // Issues
-        ])
+        let table = Table::new(
+            rows,
+            &[
+                Constraint::Ratio(1, 8), // Select
+                Constraint::Ratio(1, 8), // Cloned
+                Constraint::Ratio(2, 8), // Repository (2x)
+                Constraint::Ratio(2, 8), // Progress (2x)
+                Constraint::Ratio(1, 8), // Updated
+                Constraint::Ratio(1, 8), // Issues
+            ],
+        )
         .header(header)
         .block(
             Block::default()
@@ -162,7 +165,12 @@ impl StatsPanel<'_> {
         let stats_blocks = [
             ("Total", self.stats.total_repos.to_string(), Color::Blue, icons::STATS_TOTAL),
             ("Ready", self.stats.ready.to_string(), Color::Green, icons::STATS_READY),
-            ("Issues", format!("{}/{}", self.stats.errors, self.stats.warnings), Color::Red, icons::STATS_ISSUES),
+            (
+                "Issues",
+                format!("{}/{}", self.stats.errors, self.stats.warnings),
+                Color::Red,
+                icons::STATS_ISSUES,
+            ),
         ];
 
         for (i, (title, value, color, icon)) in stats_blocks.iter().enumerate() {

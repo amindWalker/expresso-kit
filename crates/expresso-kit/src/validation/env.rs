@@ -46,7 +46,12 @@ fn parse_env_line(line: &str) -> Option<(String, String)> {
     let t = line.trim();
     t.find('=').and_then(|pos| {
         let key = t[..pos].trim();
-        (!key.is_empty()).then(|| (key.to_string(), t[pos + 1..].trim().trim_matches('"').trim_matches('\'').to_string()))
+        (!key.is_empty()).then(|| {
+            (
+                key.to_string(),
+                t[pos + 1..].trim().trim_matches('"').trim_matches('\'').to_string(),
+            )
+        })
     })
 }
 

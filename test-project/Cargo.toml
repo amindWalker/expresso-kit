@@ -2,7 +2,7 @@
 name = "test-project"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.91.1"
+rust-version = "1.92.0"
 authors = ["Test Author <test@example.com>"]
 description = "A test project for validating expresso-kit features"
 license = "MIT"

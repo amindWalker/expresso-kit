@@ -57,7 +57,7 @@ cargo install --path crates/expresso-kit
 ### Prerequisites
 
 - Git (required for clone operations)
-- Rust 1.91+ (for building from source)
+- Rust 1.92+ (for building from source)
 
 ## Quick Start
 

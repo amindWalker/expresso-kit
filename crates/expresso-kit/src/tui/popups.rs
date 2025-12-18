@@ -87,7 +87,11 @@ impl ConfirmDialog<'_> {
             let scroll = self.scroll_offset.min(max_scroll);
 
             let scroll_indicator = if detail_lines > visible_height {
-                format!(" Details [{}/{} ↑↓j/k PgUp/Dn] ", scroll + 1, detail_lines.saturating_sub(visible_height) + 1)
+                format!(
+                    " Details [{}/{} ↑↓j/k PgUp/Dn] ",
+                    scroll + 1,
+                    detail_lines.saturating_sub(visible_height) + 1
+                )
             } else {
                 " Details ".to_string()
             };
@@ -189,47 +193,65 @@ impl HelpPopup {
 
         let inner = block.inner(help_area);
         let help_text = vec![
-            ("Navigation", vec![
-                ("↑ ↓", "Move selection up/down"),
-                ("← →", "Switch tabs"),
-                ("Tab", "Next element"),
-                ("Shift+Tab", "Previous element"),
-            ]),
-            ("Repository Operations", vec![
-                ("a", "Add repositories"),
-                ("SPACE", "Toggle selection"),
-                ("ENTER", "Confirm/Execute"),
-                ("c", "Clone (configure path)"),
-                ("v", "Validate environment"),
-                ("r", "Refresh status"),
-                ("p", "Edit repo path"),
-                ("b", "Edit global base path"),
-                ("B", "Edit repo base path"),
-                ("Del/Ctrl+D", "Remove selected repo"),
-            ]),
-            ("Environment Tab", vec![
-                ("e", "Edit .env file (multiline)"),
-                ("f", "Edit required files list"),
-                ("c", "Copy .env.sample to .env"),
-                ("v", "Validate .env against sample"),
-            ]),
-            ("UI Controls", vec![
-                ("ESC", "Go back/Close/Dismiss toasts"),
-                ("s", "Save configuration"),
-                ("h", "Show this help"),
-                ("q", "Quit application"),
-                ("+/-", "Expand/collapse details"),
-            ]),
-            ("Global", vec![
-                ("F5", "Force refresh"),
-                ("Ctrl+S", "Save configuration"),
-                ("Ctrl+C", "Emergency quit"),
-            ]),
+            (
+                "Navigation",
+                vec![
+                    ("↑ ↓", "Move selection up/down"),
+                    ("← →", "Switch tabs"),
+                    ("Tab", "Next element"),
+                    ("Shift+Tab", "Previous element"),
+                ],
+            ),
+            (
+                "Repository Operations",
+                vec![
+                    ("a", "Add repositories"),
+                    ("SPACE", "Toggle selection"),
+                    ("ENTER", "Confirm/Execute"),
+                    ("c", "Clone (configure path)"),
+                    ("v", "Validate environment"),
+                    ("r", "Refresh status"),
+                    ("p", "Edit repo path"),
+                    ("b", "Edit global base path"),
+                    ("B", "Edit repo base path"),
+                    ("Del/Ctrl+D", "Remove selected repo"),
+                ],
+            ),
+            (
+                "Environment Tab",
+                vec![
+                    ("e", "Edit .env file (multiline)"),
+                    ("f", "Edit required files list"),
+                    ("c", "Copy .env.sample to .env"),
+                    ("v", "Validate .env against sample"),
+                ],
+            ),
+            (
+                "UI Controls",
+                vec![
+                    ("ESC", "Go back/Close/Dismiss toasts"),
+                    ("s", "Save configuration"),
+                    ("h", "Show this help"),
+                    ("q", "Quit application"),
+                    ("+/-", "Expand/collapse details"),
+                ],
+            ),
+            (
+                "Global",
+                vec![
+                    ("F5", "Force refresh"),
+                    ("Ctrl+S", "Save configuration"),
+                    ("Ctrl+C", "Emergency quit"),
+                ],
+            ),
         ];
 
         let mut y_offset = 0;
         for (section, items) in help_text {
-            let title_line = Line::from(Span::styled(section, Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)));
+            let title_line = Line::from(Span::styled(
+                section,
+                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+            ));
             Paragraph::new(title_line).render(Rect::new(inner.x + 2, inner.y + y_offset, inner.width - 4, 1), buf);
             y_offset += 1;
 

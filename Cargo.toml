@@ -13,7 +13,7 @@ readme = "../../README.md"
 keywords = ["rust", "tui", "cli", "git", "docker-compose", "project", "environment", "validator"]
 categories = ["command-line-utilities", "development-tools", "automation", "devops", "validator"]
 description = "EspressoKit is an automated project validator. It validates repositories configuration for local/cloud environments with tests against a CI deployment to guarantee idempotent and reproducible results every time, ensuring easier development, high QoL and great DX"
-rust-version = "1.91.1"
+rust-version = "1.92.0"
 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

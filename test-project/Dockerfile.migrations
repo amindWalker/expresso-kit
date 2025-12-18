@@ -4,7 +4,7 @@
 # Lightweight container for running database migrations using sqlx-cli
 # =============================================================================
 
-ARG RUST_VERSION=1.91.1
+ARG RUST_VERSION=1.92.0
 FROM rust:${RUST_VERSION}-slim-bookworm
 
 # Install dependencies

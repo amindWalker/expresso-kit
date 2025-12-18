@@ -283,7 +283,11 @@ impl App {
             drop(repos); // Release lock before filesystem operations
             let (path, status) = if let Some((found_path, is_cloned)) = self.discover_repo_on_filesystem(&name) {
                 let status = if is_cloned {
-                    self.add_log(LogLevel::Success, format!("Discovered existing repo '{}' at: {}", name, found_path.display()), None);
+                    self.add_log(
+                        LogLevel::Success,
+                        format!("Discovered existing repo '{}' at: {}", name, found_path.display()),
+                        None,
+                    );
                     RepoStatus::Ready
                 } else {
                     self.add_log(
@@ -346,7 +350,11 @@ impl App {
             self.add_log(LogLevel::Warning, "No repositories selected for cloning".to_string(), None);
             return;
         }
-        self.add_log(LogLevel::Info, format!("Starting clone of {} repository(ies)...", repos_to_clone.len()), None);
+        self.add_log(
+            LogLevel::Info,
+            format!("Starting clone of {} repository(ies)...", repos_to_clone.len()),
+            None,
+        );
         for (id, url, path) in repos_to_clone {
             {
                 let mut repos = self.repos.write();
@@ -432,7 +440,12 @@ impl App {
                 Some(repo_id),
                 show_toast,
             ),
-            (true, true) => self.add_log_internal(LogLevel::Success, "Environment validation passed!".into(), Some(repo_id), show_toast),
+            (true, true) => self.add_log_internal(
+                LogLevel::Success,
+                "Environment validation passed!".into(),
+                Some(repo_id),
+                show_toast,
+            ),
             (true, false) => {
                 if !v.env.missing_vars.is_empty() {
                     self.add_log_internal(
@@ -471,7 +484,12 @@ impl App {
                     show_toast,
                 ),
                 (true, true) => {
-                    self.add_log_internal(LogLevel::Success, "docker-compose validation passed!".into(), Some(repo_id), show_toast);
+                    self.add_log_internal(
+                        LogLevel::Success,
+                        "docker-compose validation passed!".into(),
+                        Some(repo_id),
+                        show_toast,
+                    );
                 }
                 (true, false) => {
                     let total: usize = v.compose_missing_env.values().map(Vec::len).sum();
@@ -510,7 +528,11 @@ impl App {
             return;
         };
         if !repo_path.exists() {
-            self.add_log(LogLevel::Warning, format!("Repository '{}' not cloned yet", repo_name), Some(repo_id));
+            self.add_log(
+                LogLevel::Warning,
+                format!("Repository '{}' not cloned yet", repo_name),
+                Some(repo_id),
+            );
             return;
         }
         match copy_env_sample(&repo_path) {
@@ -539,7 +561,11 @@ impl App {
                         Some(repo_id),
                     );
                 } else if e.contains("No .env") {
-                    self.add_log(LogLevel::Warning, format!("No .env.sample found for '{}'", repo_name), Some(repo_id));
+                    self.add_log(
+                        LogLevel::Warning,
+                        format!("No .env.sample found for '{}'", repo_name),
+                        Some(repo_id),
+                    );
                 } else {
                     self.add_log(LogLevel::Error, format!("Failed to copy to .env: {}", e), Some(repo_id));
                 }
@@ -559,7 +585,11 @@ impl App {
             return;
         };
         if !repo_path.exists() {
-            self.add_log(LogLevel::Error, format!("Repository path does not exist: {}", repo_path.display()), Some(repo_id));
+            self.add_log(
+                LogLevel::Error,
+                format!("Repository path does not exist: {}", repo_path.display()),
+                Some(repo_id),
+            );
             return;
         }
         match std::fs::write(repo_path.join(".env"), &self.input_state.buffer) {
@@ -936,7 +966,11 @@ impl App {
     }
     fn start_clone_config(&mut self) {
         if self.repos.read().is_empty() {
-            self.add_log(LogLevel::Warning, "No repositories to clone. Add repositories first with 'a'".to_string(), None);
+            self.add_log(
+                LogLevel::Warning,
+                "No repositories to clone. Add repositories first with 'a'".to_string(),
+                None,
+            );
         } else {
             self.input_mode = InputMode::ConfiguringClone;
             self.clone_config.selected_repo_index = 0;
@@ -953,7 +987,11 @@ impl App {
         self.input_state.cursor = self.input_state.buffer.len();
         self.input_state.placeholder = "Enter global base path for repositories".to_string();
         self.input_mode = InputMode::EditingBasePath;
-        self.add_log(LogLevel::Info, "Edit global base path (Enter to save, Esc to cancel)".to_string(), None);
+        self.add_log(
+            LogLevel::Info,
+            "Edit global base path (Enter to save, Esc to cancel)".to_string(),
+            None,
+        );
     }
     fn start_edit_repo_base_path(&mut self) {
         let Some(selected) = self.repo_table_state.selected() else {
@@ -969,7 +1007,11 @@ impl App {
         self.input_state.placeholder = "Enter base path for this repository".to_string();
         drop(repos);
         self.input_mode = InputMode::EditingRepoBasePath;
-        self.add_log(LogLevel::Info, "Edit repo base path (Enter to save, Esc to cancel)".to_string(), None);
+        self.add_log(
+            LogLevel::Info,
+            "Edit repo base path (Enter to save, Esc to cancel)".to_string(),
+            None,
+        );
     }
     fn start_edit_repo_path(&mut self) {
         let Some(selected) = self.repo_table_state.selected() else {
@@ -985,7 +1027,11 @@ impl App {
         self.input_state.placeholder = "Enter new path for repository".to_string();
         drop(repos);
         self.input_mode = InputMode::EditingRepoPath;
-        self.add_log(LogLevel::Info, "Edit repository path (Enter to save, Esc to cancel)".to_string(), None);
+        self.add_log(
+            LogLevel::Info,
+            "Edit repository path (Enter to save, Esc to cancel)".to_string(),
+            None,
+        );
     }
     fn delete_selected_repo(&mut self) {
         let Some(selected) = self.repo_table_state.selected() else {
@@ -1333,7 +1379,12 @@ impl App {
             } else {
                 self.add_log(
                     LogLevel::Info,
-                    format!("Updated path for '{}': {} → {}", repo_name, old_path.display(), normalized_path.display()),
+                    format!(
+                        "Updated path for '{}': {} → {}",
+                        repo_name,
+                        old_path.display(),
+                        normalized_path.display()
+                    ),
                     Some(repo_id),
                 );
             }
@@ -1401,10 +1452,18 @@ impl App {
         }
         drop(repos);
         if updated_count > 0 {
-            self.add_log(LogLevel::Info, format!("Detected {} repository status change(s)", updated_count), None);
+            self.add_log(
+                LogLevel::Info,
+                format!("Detected {} repository status change(s)", updated_count),
+                None,
+            );
         }
         if discovered_count > 0 {
-            self.add_log(LogLevel::Success, format!("Auto-discovered {} repo(s) at new location(s)", discovered_count), None);
+            self.add_log(
+                LogLevel::Success,
+                format!("Auto-discovered {} repo(s) at new location(s)", discovered_count),
+                None,
+            );
         }
     }
     fn handle_docker_compose_edit_keys(&mut self, key: KeyEvent) -> Result<()> {
@@ -1532,13 +1591,21 @@ impl App {
             }
         };
         if !has_environment {
-            self.add_log(LogLevel::Info, format!("Service '{}' has no environment section to migrate", service_name), None);
+            self.add_log(
+                LogLevel::Info,
+                format!("Service '{}' has no environment section to migrate", service_name),
+                None,
+            );
             return;
         }
         let env_folder = self.docker_compose_state.env_folder.clone();
         match docker_compose::migrate_env_to_file(&compose_path, &repo_path, &service_name, &env_folder) {
             Ok((env_file_path, relative_path)) => {
-                self.add_log(LogLevel::Success, format!("Moved '{}' env vars to {}", service_name, relative_path), None);
+                self.add_log(
+                    LogLevel::Success,
+                    format!("Moved '{}' env vars to {}", service_name, relative_path),
+                    None,
+                );
                 self.add_log(LogLevel::Info, format!("Created: {}", env_file_path.display()), None);
                 let repos = self.repos.read();
                 if let Some(repo) = repos.get(selected_repo) {
@@ -1570,14 +1637,21 @@ impl App {
             }
         };
         if !has_env_file {
-            self.add_log(LogLevel::Info, format!("Service '{}' has no env_file reference to inline", service_name), None);
+            self.add_log(
+                LogLevel::Info,
+                format!("Service '{}' has no env_file reference to inline", service_name),
+                None,
+            );
             return;
         }
         match docker_compose::restore_env_from_file(&compose_path, &repo_path, &service_name) {
             Ok(var_count) => {
                 self.add_log(
                     LogLevel::Success,
-                    format!("Inlined '{}' environment with ${{KEY:-value}} format ({} vars)", service_name, var_count),
+                    format!(
+                        "Inlined '{}' environment with ${{KEY:-value}} format ({} vars)",
+                        service_name, var_count
+                    ),
                     None,
                 );
                 let repos = self.repos.read();
@@ -1618,7 +1692,10 @@ impl App {
         if !env_path.exists() {
             self.add_log(
                 LogLevel::Info,
-                format!("No .env file found for service '{}'. Use 'm' to move environment to .env file first.", service_name),
+                format!(
+                    "No .env file found for service '{}'. Use 'm' to move environment to .env file first.",
+                    service_name
+                ),
                 None,
             );
             return;
@@ -1723,7 +1800,11 @@ impl App {
                     if let Some(repo) = repos.get(selected) {
                         if !repo.path.exists() {
                             drop(repos);
-                            self.add_log(LogLevel::Warning, "Repository not cloned yet. Clone first to edit .env".to_string(), None);
+                            self.add_log(
+                                LogLevel::Warning,
+                                "Repository not cloned yet. Clone first to edit .env".to_string(),
+                                None,
+                            );
                             return;
                         }
                         let env_path = repo.path.join(".env");
@@ -1777,7 +1858,11 @@ impl App {
                         if docker_status.sample_exists && !docker_status.compose_exists {
                             match docker_compose::copy_compose_sample(&repo_path) {
                                 Ok(copied_path) => {
-                                    self.add_log(LogLevel::Success, format!("Copied docker-compose sample to: {:?}", copied_path), None);
+                                    self.add_log(
+                                        LogLevel::Success,
+                                        format!("Copied docker-compose sample to: {:?}", copied_path),
+                                        None,
+                                    );
                                     let repos = self.repos.read();
                                     if let Some(repo) = repos.iter().find(|r| r.name == repo_name) {
                                         let repo_id = repo.id;
@@ -1958,7 +2043,11 @@ impl App {
             self.input_mode = InputMode::SelectingWorkflow;
             self.add_log(LogLevel::Info, format!("Workflow generator opened for '{}'", name), None);
         } else {
-            self.add_log(LogLevel::Warning, "No repository selected. Add a repository first.".to_string(), None);
+            self.add_log(
+                LogLevel::Warning,
+                "No repository selected. Add a repository first.".to_string(),
+                None,
+            );
         }
     }
     fn generate_workflow_for_template(&self, template: WorkflowTemplate, detected: &DetectedProjects, path: &std::path::Path) -> String {
@@ -2287,7 +2376,10 @@ jobs:
             } else {
                 Style::default().fg(Color::White)
             };
-            lines.push(Line::from(vec![Span::styled(prefix, name_style), Span::styled(repo_name.clone(), name_style)]));
+            lines.push(Line::from(vec![
+                Span::styled(prefix, name_style),
+                Span::styled(repo_name.clone(), name_style),
+            ]));
             let path_str = repo_path.to_string_lossy();
             if is_selected && self.clone_config.editing {
                 let buffer = &self.input_state.buffer;
@@ -2875,9 +2967,15 @@ jobs:
                     Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
                 )),
                 Line::from(""),
-                Line::from(Span::styled("Press 'a' to add git repository URLs", Style::default().fg(Color::Green))),
+                Line::from(Span::styled(
+                    "Press 'a' to add git repository URLs",
+                    Style::default().fg(Color::Green),
+                )),
                 Line::from(""),
-                Line::from(Span::styled("You can paste single or multiple URLs", Style::default().fg(Color::DarkGray))),
+                Line::from(Span::styled(
+                    "You can paste single or multiple URLs",
+                    Style::default().fg(Color::DarkGray),
+                )),
                 Line::from(Span::styled("(one per line)", Style::default().fg(Color::DarkGray))),
             ];
             let centered_area = Rect::new(inner.x, start_y, inner.width, content_height);
@@ -2970,10 +3068,16 @@ jobs:
                 )),
                 Line::from(""),
                 Line::from(Span::styled("Environment validation compares:", Style::default().fg(Color::Cyan))),
-                Line::from(Span::styled(".env.sample (template) <-> .env (actual)", Style::default().fg(Color::DarkGray))),
+                Line::from(Span::styled(
+                    ".env.sample (template) <-> .env (actual)",
+                    Style::default().fg(Color::DarkGray),
+                )),
                 Line::from(""),
                 Line::from(Span::styled("[x] Missing = key not in .env", Style::default().fg(Color::Red))),
-                Line::from(Span::styled("[!] Empty = key exists but has no value", Style::default().fg(Color::Yellow))),
+                Line::from(Span::styled(
+                    "[!] Empty = key exists but has no value",
+                    Style::default().fg(Color::Yellow),
+                )),
             ];
             Paragraph::new(empty_message)
                 .alignment(Alignment::Center)
@@ -3105,8 +3209,11 @@ jobs:
                 }
                 env_lines.push(Line::from(""));
                 env_lines.push(
-                    Line::from(Span::styled("Press 'd' for docker-compose details", Style::default().fg(Color::DarkGray)))
-                        .alignment(Alignment::Center),
+                    Line::from(Span::styled(
+                        "Press 'd' for docker-compose details",
+                        Style::default().fg(Color::DarkGray),
+                    ))
+                    .alignment(Alignment::Center),
                 );
             } else {
                 env_lines.push(
@@ -3114,8 +3221,11 @@ jobs:
                         .alignment(Alignment::Center),
                 );
                 env_lines.push(
-                    Line::from(Span::styled("Add docker-compose.yml to enable", Style::default().fg(Color::DarkGray)))
-                        .alignment(Alignment::Center),
+                    Line::from(Span::styled(
+                        "Add docker-compose.yml to enable",
+                        Style::default().fg(Color::DarkGray),
+                    ))
+                    .alignment(Alignment::Center),
                 );
             }
             Paragraph::new(env_lines)
@@ -3150,7 +3260,10 @@ jobs:
                         Style::default().fg(Color::Green),
                     )));
                 } else {
-                    detail_lines.push(Line::from(Span::styled("No .env.sample file found", Style::default().fg(Color::Yellow))));
+                    detail_lines.push(Line::from(Span::styled(
+                        "No .env.sample file found",
+                        Style::default().fg(Color::Yellow),
+                    )));
                     detail_lines.push(Line::from(""));
                     detail_lines.push(Line::from(Span::styled(
                         "Add a .env.sample file with required",
@@ -3189,8 +3302,14 @@ jobs:
                     "[D] Docker Compose:",
                     Style::default().fg(Color::Blue).add_modifier(Modifier::BOLD),
                 )));
-                detail_lines.push(Line::from(Span::styled("   [x] docker-compose.yml missing", Style::default().fg(Color::Red))));
-                detail_lines.push(Line::from(Span::styled("   Press 'd' to copy from sample", Style::default().fg(Color::DarkGray))));
+                detail_lines.push(Line::from(Span::styled(
+                    "   [x] docker-compose.yml missing",
+                    Style::default().fg(Color::Red),
+                )));
+                detail_lines.push(Line::from(Span::styled(
+                    "   Press 'd' to copy from sample",
+                    Style::default().fg(Color::DarkGray),
+                )));
             } else if !repo.docker_compose_status.missing_env_vars.is_empty() {
                 detail_lines.push(Line::from(""));
                 detail_lines.push(Line::from(Span::styled(
@@ -3250,7 +3369,10 @@ jobs:
             let empty_message = Paragraph::new(vec![
                 Line::from(Span::styled("No repositories added", Style::default().fg(Color::Yellow))),
                 Line::from(""),
-                Line::from(Span::styled("Add repositories in the Repositories tab", Style::default().fg(Color::Gray))),
+                Line::from(Span::styled(
+                    "Add repositories in the Repositories tab",
+                    Style::default().fg(Color::Gray),
+                )),
             ])
             .alignment(Alignment::Center);
             empty_message.render(inner_left, frame.buffer_mut());
@@ -3374,21 +3496,17 @@ jobs:
             .collect();
         List::new(template_items).render(templates_inner, frame.buffer_mut());
         let preview_block = Block::default()
-            .title(
-                if self.workflow_state.editing {
-                    " Edit Workflow (Tab to exit edit) "
-                } else {
-                    " Preview (e to edit) "
-                },
-            )
+            .title(if self.workflow_state.editing {
+                " Edit Workflow (Tab to exit edit) "
+            } else {
+                " Preview (e to edit) "
+            })
             .title_alignment(Alignment::Center)
-            .border_style(
-                if self.workflow_state.editing {
-                    Style::default().fg(Color::Yellow)
-                } else {
-                    Style::default()
-                },
-            );
+            .border_style(if self.workflow_state.editing {
+                Style::default().fg(Color::Yellow)
+            } else {
+                Style::default()
+            });
         let preview_inner = preview_block.inner(chunks[1]);
         preview_block.render(chunks[1], frame.buffer_mut());
         let lines: Vec<Line> = self
@@ -3566,7 +3684,12 @@ jobs:
                 let repo_id: usize = repo_id_str.parse().unwrap_or(0);
                 let repos = self.repos.read();
                 repos.iter().find(|r| r.id == repo_id).map_or_else(
-                    || (format!("Validate environment for repository #{}?", repo_id), "Repository not found.".to_string()),
+                    || {
+                        (
+                            format!("Validate environment for repository #{}?", repo_id),
+                            "Repository not found.".to_string(),
+                        )
+                    },
                     |repo| {
                         let summary = format!("Validate environment for '{}'?", repo.name);
                         let details = format!(
@@ -3692,7 +3815,13 @@ jobs:
         self.start_background_tasks();
         enable_raw_mode()?;
         let mut stdout = std::io::stdout();
-        execute!(stdout, EnterAlternateScreen, TermClear(ClearType::All), MoveTo(0, 0), EnableMouseCapture)?;
+        execute!(
+            stdout,
+            EnterAlternateScreen,
+            TermClear(ClearType::All),
+            MoveTo(0, 0),
+            EnableMouseCapture
+        )?;
         let backend = CrosstermBackend::new(stdout);
         let mut terminal = Terminal::new(backend)?;
         let result = self.main_loop(&mut terminal);

@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        RUST_VERSION: ${RUST_VERSION:-1.91.1}
+        RUST_VERSION: ${RUST_VERSION:-1.92.0}
     container_name: ${APP_NAME:-test-project}-app
     restart: unless-stopped
     ports:
@@ -130,7 +130,7 @@ services:
       context: .
       dockerfile: Dockerfile.migrations
       args:
-        RUST_VERSION: ${RUST_VERSION:-1.91.1}
+        RUST_VERSION: ${RUST_VERSION:-1.92.0}
     container_name: ${APP_NAME:-test-project}-migrations
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres_password@postgres:5432/test_project_db}

@@ -1,14 +1,14 @@
+# Stable rustfmt options (Rust 1.92+)
+# These options work on stable Rust without requiring nightly
+
 edition = "2024"
 newline_style = "Unix"
 max_width = 140
 
 # Function signatures leverage width
 fn_params_layout = "Tall"
-fn_call_width = 100
-where_single_line = false
-brace_style = "SameLineWhere"
 
-# Chain formatting
+# Chain and expression widths (stable options)
 chain_width = 80
 single_line_if_else_max_width = 80
 single_line_let_else_max_width = 80
@@ -23,17 +23,26 @@ attr_fn_like_width = 80
 use_field_init_shorthand = true
 use_try_shorthand = true
 
-# Import organization
-imports_granularity = "Crate"
-group_imports = "StdExternalCrate"
+# Import organization (stable)
 reorder_imports = true
 reorder_modules = true
 
-# Misc formatting
-condense_wildcard_suffixes = true
-format_macro_matchers = true
-overflow_delimited_expr = true
-combine_control_expr = false
-wrap_comments = true
-comment_width = 100
-format_strings = true
+# ============================================================
+# Unstable options (require nightly)
+# Uncomment these when using `cargo +nightly fmt`
+# ============================================================
+
+# fn_call_width = 100
+# where_single_line = false
+# brace_style = "SameLineWhere"
+
+# imports_granularity = "Crate"
+# group_imports = "StdExternalCrate"
+
+# condense_wildcard_suffixes = true
+# format_macro_matchers = true
+# overflow_delimited_expr = true
+# combine_control_expr = false
+# wrap_comments = true
+# comment_width = 100
+# format_strings = true

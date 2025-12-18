@@ -34,7 +34,17 @@ pub fn run(cli: Cli) -> ExitCode {
             files_only,
             compare,
             cross_validate,
-        }) => run_validate(&path, format, &required_files, strict, env_only, compose_only, files_only, compare, cross_validate),
+        }) => run_validate(
+            &path,
+            format,
+            &required_files,
+            strict,
+            env_only,
+            compose_only,
+            files_only,
+            compare,
+            cross_validate,
+        ),
         Some(Commands::InitWorkflow {
             path,
             output,
@@ -57,7 +67,17 @@ pub fn run(cli: Cli) -> ExitCode {
             required_files,
             strict,
             fail_fast,
-        }) => run_discover(&path, max_depth, format, compose_only, env_only, validate, &required_files, strict, fail_fast),
+        }) => run_discover(
+            &path,
+            max_depth,
+            format,
+            compose_only,
+            env_only,
+            validate,
+            &required_files,
+            strict,
+            fail_fast,
+        ),
         None => ExitCode::SUCCESS, // Will run TUI
     }
 }

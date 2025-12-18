@@ -5,7 +5,7 @@ A sample Rust application for testing and validating **expresso-kit** features.
 ## Overview
 
 This project demonstrates a typical Rust web application setup with:
-- **Rust 1.91.1** - Latest stable Rust toolchain
+- **Rust 1.92.0** - Latest stable Rust toolchain
 - **PostgreSQL 17** - Primary database with SQLx
 - **Redis 7** - Caching and session storage
 - **SQLx Migrations** - Database schema management
@@ -16,7 +16,7 @@ This project demonstrates a typical Rust web application setup with:
 ### Prerequisites
 
 - Docker and Docker Compose
-- Rust 1.91.1 (optional, for local development)
+- Rust 1.92.0 (optional, for local development)
 
 ### Using Docker Compose
 

@@ -42,7 +42,10 @@ pub fn parse_git_url(input: &str) -> Result<String, String> {
         }
     }
 
-    Err(format!("Invalid git URL: '{}'. Expected http(s):// or git@ URL ending with .git", input))
+    Err(format!(
+        "Invalid git URL: '{}'. Expected http(s):// or git@ URL ending with .git",
+        input
+    ))
 }
 
 /// Extract a git URL from mixed text content
@@ -290,6 +293,9 @@ mod tests {
     #[test]
     fn test_extract_git_url_from_text_should_pass() {
         let text = "Check out https://github.com/user/repo.git for more info";
-        assert_eq!(extract_git_url_from_text(text), Some("https://github.com/user/repo.git".to_string()));
+        assert_eq!(
+            extract_git_url_from_text(text),
+            Some("https://github.com/user/repo.git".to_string())
+        );
     }
 }

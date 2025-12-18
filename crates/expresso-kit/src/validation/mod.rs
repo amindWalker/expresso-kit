@@ -141,9 +141,10 @@ pub fn validate_repository_with_options(path: &Path, required_files_list: &[Stri
         result.compose = docker_compose::validate_docker_compose(path);
 
         if result.compose.sample_exists {
-            result
-                .info
-                .push(format!("Compose sample: {}", result.compose.sample_path.as_deref().unwrap_or("unknown")));
+            result.info.push(format!(
+                "Compose sample: {}",
+                result.compose.sample_path.as_deref().unwrap_or("unknown")
+            ));
         }
 
         if result.compose.compose_exists {
@@ -166,7 +167,10 @@ pub fn validate_repository_with_options(path: &Path, required_files_list: &[Stri
         if opts.compare_compose
             && result.compose.sample_exists
             && result.compose.compose_exists
-            && let (Some(sample), Some(actual)) = (docker_compose::find_compose_sample_file(path), docker_compose::find_compose_file(path))
+            && let (Some(sample), Some(actual)) = (
+                docker_compose::find_compose_sample_file(path),
+                docker_compose::find_compose_file(path),
+            )
             && let Ok(comparisons) = docker_compose::compare_compose_services(&sample, &actual)
         {
             for comp in comparisons {
