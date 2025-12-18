@@ -52,6 +52,9 @@ jobs:
       - name: Build expresso-kit
         run: cargo build --release
 
+      - name: Setup test-project .env from sample
+        run: cp test-project/.env.sample test-project/.env
+
       # Project discovery
       - name: Test discover command finds test-project
         run: |

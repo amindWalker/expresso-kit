@@ -55,6 +55,9 @@ jobs:
       - name: Add binary to PATH
         run: echo "$PWD/target/release" >> $GITHUB_PATH
 
+      - name: Setup test-project .env from sample
+        run: cp test-project/.env.sample test-project/.env
+
       # TEST ALL CLI COMMANDS
       - name: Test --help
         run: ./target/release/expresso-kit --help
