@@ -10,7 +10,7 @@
 # =============================================================================
 
 [alias]
-# Formatting - USE: cargo +nightly fmt
+# Formatting - USE: cargo +nightly fmt if you need extended fmt features
 # (aliases provided for reference, but +nightly must be used directly)
 # -----------------------------------------------------------------------------
 # cargo +nightly fmt --all
